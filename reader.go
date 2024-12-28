@@ -2,6 +2,7 @@ package streamDuplicator
 
 import (
 	"errors"
+	"io"
 
 	"github.com/google/uuid"
 )
@@ -67,6 +68,9 @@ func (r *Reader) Read(p []byte) (int, error) {
 				copy(p[totalRead:], buf[:n])
 				totalRead += n
 				r.byteIndex += n
+			}
+			if err == io.EOF && totalRead > 0 {
+				return totalRead, nil
 			}
 			if err != nil {
 				return totalRead, err
