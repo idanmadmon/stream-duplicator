@@ -86,6 +86,7 @@ func (r *Reader) Close() error {
 	}
 	r.closed = true
 	delete(sd.readers, r.id)
+	sd.wg.Done()
 	sd.mu.Unlock()
 	return nil
 }

@@ -12,6 +12,7 @@ type StreamDuplicator struct {
 	cache         map[int][]byte
 	readers       map[uuid.UUID]*Reader
 	mu            sync.Mutex
+	wg            sync.WaitGroup
 	maxOffsetDiff int
 }
 
@@ -57,8 +58,13 @@ func (sd *StreamDuplicator) AddReader() *Reader {
 		byteIndex:  0,
 	}
 	sd.readers[id] = reader
+	sd.wg.Add(1)
 	sd.mu.Unlock()
 	return reader
+}
+
+func (sd *StreamDuplicator) WaitForReaders() {
+	sd.wg.Wait()
 }
 
 func (sd *StreamDuplicator) cleanCache() {
