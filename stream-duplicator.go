@@ -12,6 +12,7 @@ type StreamDuplicator struct {
 	cache         map[int][]byte
 	readers       map[uuid.UUID]*Reader
 	mu            sync.Mutex
+	readingLock   sync.Mutex
 	wg            sync.WaitGroup
 	maxOffsetDiff int
 }

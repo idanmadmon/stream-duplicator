@@ -2,7 +2,6 @@ package streamDuplicator
 
 import (
 	"errors"
-	"io"
 
 	"github.com/google/uuid"
 )
@@ -58,6 +57,13 @@ func (r *Reader) Read(p []byte) (int, error) {
 			sd.cleanCache()
 			sd.mu.Unlock()
 		} else { // no cache
+			locked := sd.readingLock.TryLock()
+			if !locked { // someone else is reading - wait for finish and loop
+				sd.readingLock.Lock()
+				sd.readingLock.Unlock()
+				continue
+			}
+
 			buf := make([]byte, toRead-totalRead)
 			n, err := sd.source.Read(buf)
 			if n > 0 {
@@ -69,9 +75,8 @@ func (r *Reader) Read(p []byte) (int, error) {
 				totalRead += n
 				r.byteIndex += n
 			}
-			if err == io.EOF && totalRead > 0 {
-				return totalRead, nil
-			}
+
+			sd.readingLock.Unlock()
 			if err != nil {
 				return totalRead, err
 			}
